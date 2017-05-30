@@ -1,0 +1,60 @@
+#!/bin/bash
+
+
+#get interface names
+iface_wifi=$(nmcli --terse --fields DEVICE,TYPE dev status | grep wifi | cut -d \: -f 1)
+
+# GET HOST IPS 
+ip_wlo1=$(ip -f inet -o addr show $iface_wifi|cut -d\  -f 7 | cut -d/ -f 1)
+
+
+pluto_found=false
+
+if [ "$USER" == "robot" ]
+then
+    export ROS_MASTER_URI=http://plutorobot.funky.uos.de:11311
+    export ROS_IP=131.173.210.241
+    unset ROS_HOSTNAME
+else 
+#CLIENT
+# FIRST CHECK IF PLUTONET IS CONNECTED
+    if nmcli dev | grep -q PlutoNet; 
+    then
+        export PLUTO_IP="192.168.178.24"
+        export ROS_MASTER_URI=http://192.168.178.24:11311
+        echo "Ros Master: PlutoNet (wifi)" 
+        export ROS_IP=$ip_wlo1
+        unset ROS_HOSTNAME
+        pluto_found=true
+    elif nmcli dev | grep -q RoboNet; #THEN CHECK IF ROBONET IS CONNECTED
+    then
+        echo "Ros Master: RoboNet"
+        export PLUTO_IP="131.173.210.241"
+        export ROS_MASTER_URI=http://131.173.210.241:11311
+        export ROS_IP=$ip_wlo1
+        unset ROS_HOSTNAME
+        pluto_found=true
+    elif nmcli dev | grep -q eduroam; 
+    then
+        echo "Ros Master: eduroam"
+        export PLUTO_IP="131.173.210.241"
+        export ROS_MASTER_URI=http://131.173.210.241:11311
+        export ROS_IP=$ip_wlo1
+        unset ROS_HOSTNAME
+        pluto_found=true
+    else # ELSE SET LOCALHOST TO ROSMASTER
+        echo "Ros Master: Localhost"
+        export ROS_MASTER_URI=http://localhost:11311
+        export ROS_HOSTNAME=localhost
+        unset ROS_IP
+    fi
+fi
+
+if $pluto_found
+then
+echo "Pluto: $PLUTO_IP"
+plutossh() {
+    ssh robot@$PLUTO_IP
+}
+fi
+
