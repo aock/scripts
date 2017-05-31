@@ -52,7 +52,6 @@ fi
 
 if $pluto_found
 then
-echo "Pluto: $PLUTO_IP"
 plutossh() {
     ssh robot@$PLUTO_IP
 }
