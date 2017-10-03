@@ -1,5 +1,6 @@
 #for i in $(find -regex '.*/.*\.\(c\|cpp\|h\|hpp\|tcc\|txt\|cu\|cl\)$');
-for i in $(git diff --name-only develop..dev-largescale);
+#for i in $(git diff --name-only develop..dev-largescale);
+for i in $(git diff --name-only HEAD^ HEAD);
 do
     echo ${i}
     sed -i -e 's/\t/    /g' ${i}
