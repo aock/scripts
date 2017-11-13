@@ -1,11 +1,13 @@
 #!/bin/bash
-
+lan_conn=false
 
 #get interface names
 iface_wifi=$(nmcli --terse --fields DEVICE,TYPE dev status | grep wifi | cut -d \: -f 1)
+iface_eth=$(nmcli --terse --fields DEVICE,TYPE dev status | grep eth | cut -d \: -f 1)
 
 # GET HOST IPS 
 ip_wlo1=$(ip -f inet -o addr show $iface_wifi|cut -d\  -f 7 | cut -d/ -f 1)
+ip_eth=$(ip -f inet -o addr show $iface_eth|cut -d\  -f 7 | cut -d/ -f 1)
 
 
 pluto_found=false
@@ -18,7 +20,7 @@ then
 else 
 #CLIENT
 # FIRST CHECK IF PLUTONET IS CONNECTED
-    if nmcli dev | grep -q PlutoNet; 
+    if nmcli dev | grep -q PlutoNet ; 
     then
         export PLUTO_IP="192.168.178.24"
         export ROS_MASTER_URI=http://192.168.178.24:11311
@@ -50,8 +52,19 @@ else
     fi
 fi
 
+if [ "$lan_conn" = true ] ;
+then
+    export PLUTO_IP="192.168.178.24"
+    export ROS_MASTER_URI=http://192.168.178.24:11311
+    echo "LAN"
+    export ROS_IP=$ip_eth
+    unset ROS_HOSTNAME
+    pluto_found=true
+fi
+
 if $pluto_found
 then
+echo "Pluto: $PLUTO_IP"
 plutossh() {
     ssh robot@$PLUTO_IP
 }
